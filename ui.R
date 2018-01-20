@@ -84,14 +84,14 @@ ui <- dashboardPage(
               ),
               textInput("ti_Interest_Rate", "Interest Rate in %", "4"),
               textInput("ti_Stock_Volatility", "Stock Volatility in %", "0")
-                   ),
+            ),
             
             column(
               3,
               textInput("ti_Mark_To_Model", "Mark To Model", "1"),
               actionButton("ab_Initial_Pricing", "Finish Initial Pricing")
             )
-            ),
+          ),
           
           box(
             id = "box_Do",
@@ -172,13 +172,141 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = "optionpricing",
-              h2("Option Pricing")),
+              h2("Option Pricing"),
+              
+              
+              fluidRow(
+                
+                box(
+                  id = "box_Initial_Pricing2",
+                  title = "Initial Pricing",
+                  width = 12,
+                  status = "primary",
+                  solidHeader = TRUE,
+                  collapsible = TRUE,
+                  
+                  #actionButton("initialReadFile", "Load initial values"),
+                  column(
+                    3,
+                    textInput("ti_Type_Of_Stock_Derivative2", "Type of Stock Derivative", "1"),
+                    textInput("ti_Stock_ISIN2", "Stock ISIN", "SK1234"),
+                    textInput("ti_Contract_Size2", "Contract Size", "1")
+                  ),
+                  
+                  column(
+                    3,
+                    textInput("ti_Number_Of_Contracts2", "Number Of Contracts", "1"),
+                    textInput("ti_Exercise_Or_Forward_Price2", "Exercise Or Forward Price", "100"),
+                    dateInput(
+                      "ti_Contracting_Date2",
+                      "Contracting Date",
+                      value = "2020-01-01",
+                      min = "2020-01-01"
+                    )
+                  ),
+                  
+                  column(
+                    3,
+                    dateInput(
+                      "ti_Expiration_Date2",
+                      "Expiration Date",
+                      value = "2020-12-31",
+                      min = "2020-01-01"
+                    ),
+                    textInput("ti_Interest_Rate2", "Interest Rate in %", "5"),
+                    textInput("ti_Stock_Volatility2", "Stock Volatility in %", "20")
+                  ),
+                  
+                  column(
+                    3,
+                    textInput("ti_Mark_To_Model2", "Mark To Model", "1"),
+                    actionButton("ab_Initial_Pricing2", "Finish Initial Pricing")
+                  )
+                ),
+                
+                box(
+                  id = "box_Do2",
+                  title = "First Step (Do)",
+                  width = 3,
+                  align = "center",
+                  status = "primary",
+                  solidHeader = TRUE,
+                  collapsible = TRUE,
+                  collapsed = TRUE,
+                  #  title = "Subsequent Pricings",width = 4, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+                  
+                  dateInput(
+                    "ti_Do_timestamp2",
+                    "Date",
+                    value = "2020-03-31",
+                    min = "2020-01-01"
+                  ),
+                  textInput(
+                    "ti_Do_Stock_Price2",
+                    "Stock Price",
+                    value = 100
+                  ),
+                  actionButton("button_Do2", "Do")
+                ),
+                
+                box(
+                  id = "box_Plan2",
+                  title = "Second Step (Plan)",
+                  width = 3,
+                  align = "center",
+                  status = "primary",
+                  solidHeader = TRUE,
+                  collapsible = TRUE,
+                  collapsed = TRUE,
+                  actionButton("button_Plan2", "Plan"),
+                  verbatimTextOutput("to_Plan2", placeholder = TRUE)
+                ),
+                
+                box(
+                  id = "box_Check2",
+                  title = "Third Step (Check)",
+                  width = 3,
+                  align = "center",
+                  status = "primary",
+                  solidHeader = TRUE,
+                  collapsible = TRUE,
+                  collapsed = TRUE,
+                  actionButton("button_Check2", "Check"),
+                  verbatimTextOutput("to_Check2", placeholder = TRUE)
+                ),
+                
+                box(
+                  id = "box_Act2",
+                  title = "Fourth Step (Act)",
+                  width = 3,
+                  align = "center",
+                  status = "primary",
+                  solidHeader = TRUE,
+                  collapsible = TRUE,
+                  collapsed = TRUE,
+                  actionButton("button_Act2", "Act"),
+                  verbatimTextOutput("to_Act2", placeholder = TRUE),
+                  actionButton("button_Act_Continue2", "Continue")
+                ),
+                
+                box(
+                  
+                  title = "Timeline2",
+                  width = 12,
+                  status = "primary",
+                  solidHeader = TRUE,
+                  collapsible = TRUE,
+                  dygraphOutput("timeline2", height = 250)
+                )
+              )
+              ),
+      
       
       tabItem(
         tabName = "tableexplorer",
         h2("Table Explorer"),
         fluidRow(
-
+          
           box(
             title = "Table: Stock_Pricing_Dynamic",
             width = 12,
