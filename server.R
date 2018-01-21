@@ -67,6 +67,9 @@ server <- function(input, output, session) {
   
   observeEvent(input$ab_Initial_Pricing2, { #initial writes into Stock_Pricing_Dynamic
     js$collapse("box_Do2")
+    js$collapse("box_Check2")
+    js$collapse("box_Act2")
+    js$collapse("box_Plan2")
     hide(id = "box_Initial_Pricing2", anim = FALSE)
     
     temp_db_Stock_Derivative_Static <-
@@ -241,6 +244,11 @@ server <- function(input, output, session) {
     temp_Derivative_Instrument_Dynamic <-
       dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
     
+    isAsset=0
+    if(FV > 0) {
+      isAsset = 1
+    }
+    
     temp_db_Economic_Resource_Risky_Income <-
       cbind.data.frame(
         tail(
@@ -250,7 +258,7 @@ server <- function(input, output, session) {
         as.character(input$ti_Contracting_Date2),
         N_d_1, #this value isnt 1 for option call
         N_d_1*100,
-        1
+        isAsset#maybe
       )
     names(temp_db_Economic_Resource_Risky_Income) <-
       c(
@@ -279,7 +287,7 @@ server <- function(input, output, session) {
         ),
         as.character(input$ti_Contracting_Date2),
         (N_d_1*100 - FV)*(-1),
-        1
+        1#
       )
     names(temp_db_Economic_Resource_Fixed_Income) <-
       c(
@@ -298,7 +306,7 @@ server <- function(input, output, session) {
   }) 
   #end of initial part
   
-
+  
   
   #do button for forward pricing
   observeEvent(input$button_Do, { 
@@ -375,18 +383,18 @@ server <- function(input, output, session) {
         as.Date(input$ti_Do_timestamp2),
         unit = "weeks"
       ))
-
+    
     T_0_t <- round(pending_weeks / 52.1775,2)
-
+    
     # d1
     d_1_0 = (log(P_A_0/X_0_t) + (r_0_t + (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
     # d2
     d_2_0 = (log(P_A_0/X_0_t) + (r_0_t - (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
     #for final case - zero division
-
+    
     print("d_1_0")
-     print(d_1_0)
-     
+    print(d_1_0)
+    
     
     N_d_1 = pnorm(d_1_0)
     v2$Nd1new=N_d_1
@@ -400,6 +408,10 @@ server <- function(input, output, session) {
       d_2_0 = 0
       N_d_1 = 0
       N_d_1 = 0
+      v2$Nd2new = 0
+      v2$Nd1new = 0
+      v2$Nd2old = 0
+      v2$Nd1old = 0
       
     }
     
@@ -408,13 +420,18 @@ server <- function(input, output, session) {
     v2$liability=LIABILITY
     
     # forward value
-
+    
     
     FV = ASSET - LIABILITY
     
-    #print(FV)
+    N_d_1r = round(N_d_1*100,2)#just to print nice value
+    nd1string = paste0("N(d1) = ",N_d_1r,"%" , collapse = NULL)
+    #nd1string = nd1string + as.character(N_d_1)
     
-    output$to_Plan2 <- renderText(as.character(N_d_1))#renderText("N(d1) =", str(N_d_1))
+    output$to_Plan2 <- renderText(nd1string)
+    
+
+    #renderText("N(d1) =", str(N_d_1))
     #js$collapse("box_Check2")
   })
   
@@ -429,7 +446,7 @@ server <- function(input, output, session) {
   
   v2 <- reactiveValues(N_diff=0)
   v2 <- reactiveValues(change=0) #when 0 no change needed, when 1 propose change
-
+  
   
   #check button for call option
   observeEvent(input$button_Check2, {
@@ -440,19 +457,26 @@ server <- function(input, output, session) {
     N_d1_old <- tail(temp_db_Economic_Resource_Risky_Income$Nd1t,1)
     
     N_diff <- v2$Nd1new - N_d1_old
-    v2$N_diff = N_diff
+    
+
+    
+      v2$N_diff = N_diff
     
     
     if ( N_diff  != 0)
     {
       v2$change = 1 #if i want rebalance of portfolio
     }
+  
+    if (v2$Nd1new == 0) {
+      N_diff = 0
+    }
+    N_diffr = round(N_diff*100,2)
+    output$to_Check2 <- renderText(paste("delta(Nd1) = ",N_diffr,"%"))
     
-    output$to_Check2 <- renderText(as.character(N_diff))
     
     
-    
-      #js$collapse("box_Act2")
+    #js$collapse("box_Act2")
   })
   
   
@@ -464,7 +488,7 @@ server <- function(input, output, session) {
   
   #Act button for call option
   observeEvent(input$button_Act2, {
-    output$to_Act2 <- renderText("new portfolio value")
+    output$to_Act2 <- renderText(paste("PF value = ",round(FV,2)))
     v2$doCalcAndPlot2 <- input$button_Act2 #CalcAndPlot
     
     
@@ -489,7 +513,7 @@ server <- function(input, output, session) {
         as.Date(input$ti_Do_timestamp2),
         unit = "weeks"
       ))
-      
+    
     
     T_0_t <- round(pending_weeks / 52.1775,2)
     
@@ -499,14 +523,14 @@ server <- function(input, output, session) {
     # d2
     d_2_0 = (log(P_A_0/X_0_t) + (r_0_t - (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
     # print(d_1_0)
-
+    
     
     
     N_d_1 = pnorm(round(d_1_0,4))
     
     N_d_2 = pnorm(round(d_2_0,4))
     v2$Nd2new = N_d_2
-       #
+    #
     if (T_0_t == 0)
     {
       d_1_0 = 0
@@ -519,7 +543,7 @@ server <- function(input, output, session) {
     print(tail(v2$Nd1old,1))
     print('nd2old')
     print(tail(v2$Nd2old,1))
-               
+    
     print('nd1new')
     print(tail(v2$Nd1new,1))
     print('nd2new')
@@ -530,18 +554,18 @@ server <- function(input, output, session) {
     
     # forward value
     FV = ASSET - LIABILITY
-
+    
     ASSET = P_A_0 * v2$Nd1new #after transaction
     LIABILITY = ASSET - FV #after transaction
     
     v2$liability=LIABILITY
     v2$asset=ASSET
-
+    
     v2$Nd2old = N_d_2
     Nd2old=N_d_2
     v2$Nd1old = N_d_1
-        
-  #  if (v2$change == 1)#if rebalance needed store into database
+    
+    #  if (v2$change == 1)#if rebalance needed store into database
     
     {
       #act2 store into Derivative_Instrument_Dynamic 
@@ -630,6 +654,12 @@ server <- function(input, output, session) {
       temp_Derivative_Instrument_Dynamic <-
         dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
       
+        isAsset=0
+        if(FV > 0) {
+          isAsset = 1
+        }
+          
+      
       temp_db_Economic_Resource_Risky_Income <-
         cbind.data.frame(
           tail(
@@ -640,7 +670,7 @@ server <- function(input, output, session) {
           
           N_d_1, #this value isnt 1 for option call
           N_d_1*P_A_0, #value of stock
-          1
+          isAsset#maybe
         )
       names(temp_db_Economic_Resource_Risky_Income) <-
         c(
@@ -670,7 +700,7 @@ server <- function(input, output, session) {
           as.character(input$ti_Do_timestamp2),
           
           (N_d_1*P_A_0 - FV)*(-1),
-          1
+          1#
         )
       names(temp_db_Economic_Resource_Fixed_Income) <-
         c(
@@ -689,7 +719,7 @@ server <- function(input, output, session) {
       
       
     }
-      
+    
   })
   
   
@@ -705,9 +735,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$button_Act_Continue2, {
-    js$collapse("box_Act2")
-    js$collapse("box_Plan2")
-    js$collapse("box_Check2")
+   #js$collapse("box_Act2")
+    #js$collapse("box_Plan2")
+    #js$collapse("box_Check2")
     
     output$to_Plan2 <- renderText("")
     output$to_Check2 <- renderText("")
@@ -739,13 +769,13 @@ server <- function(input, output, session) {
       temp_db_draw2 <- dbReadTable(sqlite, "Stock_Pricing_Dynamic")
       temp_db_draw2$Pricing_Date <-
         as.Date(as.POSIXct(temp_db_draw2$timestamp))
-
- #   print(tail(v2$liability,1))
-  #  print(tail(v2$N_diff,1))
-  #  print(tail(temp_db_draw2$Stock_Price,1))
-    
-          temp_db_draw2$F_Price <- tail((v2$liability + v2$N_diff*temp_db_draw2$Stock_Price),1)#exercise price 
-       
+      
+      #   print(tail(v2$liability,1))
+      #  print(tail(v2$N_diff,1))
+      #  print(tail(temp_db_draw2$Stock_Price,1))
+      
+      temp_db_draw2$F_Price <- tail((v2$liability + v2$N_diff*temp_db_draw2$Stock_Price),1)#exercise price 
+      
       temp_db_draw2$Liability <-v2$liability
       temp_db_draw2$Asset <- v2$asset
       
@@ -760,15 +790,15 @@ server <- function(input, output, session) {
             , order.by =
               temp_db_draw2[, 5])
       
-
+      
       
       #Plotting XTS
       dygraph(temp_xts_draw2) %>%
         dyRangeSelector()
-
+      
       
     })
-    })
+  })
   
   v <- reactiveValues(doCalcAndPlot = FALSE) #recalc and redraw
   
@@ -847,6 +877,7 @@ server <- function(input, output, session) {
       temp_Derivative_Instrument_Dynamic <-
         dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
       
+      
       temp_db_Economic_Resource_Risky_Income <-
         cbind.data.frame(
           tail(
@@ -856,7 +887,7 @@ server <- function(input, output, session) {
           as.character(input$ti_Do_timestamp),
           1, #this value isnt 1 for option call
           tail(temp_db_draw$'Asset', 1),
-          1
+          1#
         )
       names(temp_db_Economic_Resource_Risky_Income) <-
         c(
@@ -885,7 +916,7 @@ server <- function(input, output, session) {
           ),
           as.character(input$ti_Do_timestamp),
           tail(temp_db_draw$'Liability', 1),
-          1
+          1#
         )
       names(temp_db_Economic_Resource_Fixed_Income) <-
         c(
