@@ -410,8 +410,6 @@ server <- function(input, output, session) {
       N_d_1 = 0
       v2$Nd2new = 0
       v2$Nd1new = 0
-      v2$Nd2old = 0
-      v2$Nd1old = 0
       
     }
     
