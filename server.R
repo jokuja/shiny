@@ -67,10 +67,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$ab_Initial_Pricing2, { #initial writes into Stock_Pricing_Dynamic
     js$collapse("box_Do2")
-    js$collapse("box_Check2")
-    js$collapse("box_Act2")
-    js$collapse("box_Plan2")
-    hide(id = "box_Initial_Pricing2", anim = FALSE)
+    js$collapse("box_Initial_Pricing2")
     
     temp_db_Stock_Derivative_Static <-
       cbind.data.frame(
@@ -346,7 +343,7 @@ server <- function(input, output, session) {
                  temp_db_Stock_Pricing_Dynamic,
                  append = TRUE)
     
-    #js$collapse("box_Plan2")
+    js$collapse("box_Plan2")
   })
   
   
@@ -392,10 +389,6 @@ server <- function(input, output, session) {
     d_2_0 = (log(P_A_0/X_0_t) + (r_0_t - (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
     #for final case - zero division
     
-    print("d_1_0")
-    print(d_1_0)
-    
-    
     N_d_1 = pnorm(d_1_0)
     v2$Nd1new=N_d_1
     
@@ -428,9 +421,7 @@ server <- function(input, output, session) {
     
     output$to_Plan2 <- renderText(nd1string)
     
-
-    #renderText("N(d1) =", str(N_d_1))
-    #js$collapse("box_Check2")
+    js$collapse("box_Check2")
   })
   
   #https://stackoverflow.com/questions/19611254/r-shiny-disable-able-shinyui-elements
@@ -455,9 +446,7 @@ server <- function(input, output, session) {
     N_d1_old <- tail(temp_db_Economic_Resource_Risky_Income$Nd1t,1)
     
     N_diff <- v2$Nd1new - N_d1_old
-    
-
-    
+  
       v2$N_diff = N_diff
     
     
@@ -472,9 +461,7 @@ server <- function(input, output, session) {
     N_diffr = round(N_diff*100,2)
     output$to_Check2 <- renderText(paste("delta(Nd1) = ",N_diffr,"%"))
     
-    
-    
-    #js$collapse("box_Act2")
+    js$collapse("box_Act2")
   })
   
   
@@ -537,15 +524,15 @@ server <- function(input, output, session) {
       N_d_1 = 0
       
     }
-    print('nd1old')
-    print(tail(v2$Nd1old,1))
-    print('nd2old')
-    print(tail(v2$Nd2old,1))
+    #print('nd1old')
+    #print(tail(v2$Nd1old,1))
+    #print('nd2old')
+    #print(tail(v2$Nd2old,1))
     
-    print('nd1new')
-    print(tail(v2$Nd1new,1))
-    print('nd2new')
-    print(tail(v2$Nd2new,1))
+    #print('nd1new')
+    #print(tail(v2$Nd1new,1))
+    #print('nd2new')
+    #print(tail(v2$Nd2new,1))
     
     ASSET = P_A_0 * v2$Nd1old
     LIABILITY = X_0_t * exp((-(r_0_t) * T_0_t)) * v2$Nd2old #before transaction
@@ -733,9 +720,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$button_Act_Continue2, {
-   #js$collapse("box_Act2")
-    #js$collapse("box_Plan2")
-    #js$collapse("box_Check2")
+    js$collapse("box_Act2")
+    js$collapse("box_Plan2")
+    js$collapse("box_Check2")
     
     output$to_Plan2 <- renderText("")
     output$to_Check2 <- renderText("")
@@ -767,29 +754,55 @@ server <- function(input, output, session) {
       temp_db_draw2 <- dbReadTable(sqlite, "Stock_Pricing_Dynamic")
       temp_db_draw2$Pricing_Date <-
         as.Date(as.POSIXct(temp_db_draw2$timestamp))
+    
+      print(tail(v2$liability,1))
+      print(tail(v2$N_diff,1))
+      print(tail(temp_db_draw2$Stock_Price,1))
+    
+      temp_db_draw2$TtM <- 
+        as.numeric(difftime(
+          as.Date(isolate(input$ti_Expiration_Date2)),
+          as.Date(temp_db_draw2$Pricing_Date),
+          unit = "weeks"
+        )) / 52.1775
+        
+        
+      #interest rate from input
+      temp_db_draw2$Interest_Rate <-
+        as.numeric(input$ti_Interest_Rate2) / 100
       
-      #   print(tail(v2$liability,1))
-      #  print(tail(v2$N_diff,1))
-      #  print(tail(temp_db_draw2$Stock_Price,1))
+      #interest rate log
+      temp_db_draw2$Interest_Rate_Cont <-
+        log(1 + temp_db_draw2$Interest_Rate)
       
-      temp_db_draw2$F_Price <- tail((v2$liability + v2$N_diff*temp_db_draw2$Stock_Price),1)#exercise price 
+      temp_db_draw2$F_Price <-
+        temp_db_draw2[1, 3] * (1 + as.numeric(input$ti_Interest_Rate2) / 100) ^ (as.numeric(difftime(
+          as.Date(input$ti_Expiration_Date2),
+          as.Date(input$ti_Contracting_Date2),
+          unit = "weeks"
+        )) / 52.1775)
       
-      temp_db_draw2$Liability <-v2$liability
-      temp_db_draw2$Asset <- v2$asset
+      X_0_t = as.numeric(input$ti_Exercise_Or_Forward_Price2)
+      r_0_t = as.numeric(input$ti_Interest_Rate2)/ 100
+      volatility = as.numeric(input$ti_Stock_Volatility2)/ 100
+      
+      temp_db_draw2$nd1 <- pnorm((log(as.numeric(input$ti_Do_Stock_Price2)/X_0_t) + (r_0_t + (volatility^2)/2) * temp_db_draw2$TtM)/(volatility*sqrt(temp_db_draw2$TtM)))
+      temp_db_draw2$nd2 = pnorm((log(as.numeric(input$ti_Do_Stock_Price2)/X_0_t) + (r_0_t - (volatility^2)/2) * temp_db_draw2$TtM)/(volatility*sqrt(temp_db_draw2$TtM)))
+      
+      temp_db_draw2$Liability <-  X_0_t * exp((-(r_0_t) * temp_db_draw2$TtM)) * temp_db_draw2$nd2
+      temp_db_draw2$Asset <- as.numeric(input$ti_Do_Stock_Price2) * temp_db_draw2$nd1
       
       temp_db_draw2$'Forward Value' <-
-        temp_db_draw2$F_Price
+        temp_db_draw2$Liability - temp_db_draw2$Asset
       
-      #print(tail(temp_db_draw2$F_Price,1))
+      print(temp_db_draw2)
       
       #Composing XTS
       temp_xts_draw2 <-
         xts(x = temp_db_draw2[, c("Asset", "Liability", "Forward Value")]
             , order.by =
               temp_db_draw2[, 5])
-      
-      
-      
+      print(temp_xts_draw2)
       #Plotting XTS
       dygraph(temp_xts_draw2) %>%
         dyRangeSelector()
@@ -839,12 +852,12 @@ server <- function(input, output, session) {
       
       temp_db_draw$'Forward Value' <-
         round(temp_db_draw$Liability + temp_db_draw$Stock_Price, 1)
-      
+      print(temp_db_draw)
       #Composing XTS
       temp_xts_draw <-
         xts(x = temp_db_draw[, c("Asset", "Liability", "Forward Value")], order.by =
               temp_db_draw[, 5])
-      
+      print(temp_xts_draw)
       
       #Derivative_Instrument_Dynamic entry
       temp_Stock_Derivative_Static <-

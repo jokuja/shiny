@@ -24,8 +24,8 @@ ui <- dashboardPage(
     menuItem(
       "Option Pricing",
       tabName = "optionpricing",
-      badgeColor = "red",
-      badgeLabel = "help!",
+      badgeColor = "yellow",
+      badgeLabel = "new!",
       icon = icon("road")
     ),
     menuItem("Table Explorer",
@@ -173,7 +173,7 @@ ui <- dashboardPage(
       
       tabItem(tabName = "optionpricing",
               h2("Option Pricing"),
-              
+              p("European options are contracts that give the owner the right, but not the obligation, to buy or sell the underlying security at a specific price, known as the strike price, on the option's expiration date. A European call option gives the owner the right to purchase the underlying security, while a European put option gives the owner the right to sell the underlying security. A buyer of a European option who does not want to wait for maturity to exercise it can sell the option to close the position."),
               
               fluidRow(
                 
@@ -291,7 +291,7 @@ ui <- dashboardPage(
                 
                 box(
                   
-                  title = "Timeline2",
+                  title = "Timeline",
                   width = 12,
                   status = "primary",
                   solidHeader = TRUE,
