@@ -125,8 +125,8 @@ server <- function(input, output, session) {
     v2$Nd1old = N_d_1
     v2$Nd2old=N_d_2
     
-    print(N_d_1)
-    print(N_d_2)
+    #print(N_d_1)
+    #print(N_d_2)
     
     
     ASSET = P_A_0 * N_d_1
@@ -730,6 +730,19 @@ server <- function(input, output, session) {
     
   })
   
+  observeEvent(input$button_Restart, {
+    js$collapse("box_Act2")
+    js$collapse("box_Plan2")
+    js$collapse("box_Check2")
+    js$collapse("box_Do2")
+    js$collapse("box_Initial_Pricing2")
+    
+    output$to_Plan2 <- renderText("")
+    output$to_Check2 <- renderText("")
+    output$to_Act2 <- renderText("")
+    
+  })
+  
   
   observeEvent(input$reset_db, {
     dbSendStatement(sqlite, "DELETE from Stock_Derivative_Static")
@@ -755,9 +768,9 @@ server <- function(input, output, session) {
       temp_db_draw2$Pricing_Date <-
         as.Date(as.POSIXct(temp_db_draw2$timestamp))
     
-      print(tail(v2$liability,1))
-      print(tail(v2$N_diff,1))
-      print(tail(temp_db_draw2$Stock_Price,1))
+      #print(tail(v2$liability,1))
+      #print(tail(v2$N_diff,1))
+      #print(tail(temp_db_draw2$Stock_Price,1))
     
       temp_db_draw2$TtM <- 
         as.numeric(difftime(
@@ -795,14 +808,12 @@ server <- function(input, output, session) {
       temp_db_draw2$'Forward Value' <-
         temp_db_draw2$Liability - temp_db_draw2$Asset
       
-      print(temp_db_draw2)
-      
       #Composing XTS
       temp_xts_draw2 <-
         xts(x = temp_db_draw2[, c("Asset", "Liability", "Forward Value")]
             , order.by =
               temp_db_draw2[, 5])
-      print(temp_xts_draw2)
+
       #Plotting XTS
       dygraph(temp_xts_draw2) %>%
         dyRangeSelector()
@@ -852,12 +863,11 @@ server <- function(input, output, session) {
       
       temp_db_draw$'Forward Value' <-
         round(temp_db_draw$Liability + temp_db_draw$Stock_Price, 1)
-      print(temp_db_draw)
+
       #Composing XTS
       temp_xts_draw <-
         xts(x = temp_db_draw[, c("Asset", "Liability", "Forward Value")], order.by =
               temp_db_draw[, 5])
-      print(temp_xts_draw)
       
       #Derivative_Instrument_Dynamic entry
       temp_Stock_Derivative_Static <-

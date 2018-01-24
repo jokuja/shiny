@@ -25,11 +25,13 @@ ui <- dashboardPage(
       "Option Pricing",
       tabName = "optionpricing",
       badgeColor = "yellow",
-      badgeLabel = "new!",
+      badgeLabel = "new",
       icon = icon("road")
     ),
     menuItem("Table Explorer",
              tabName = "tableexplorer",
+             badgeColor = "red",
+             badgeLabel = "expert",
              icon = icon("gear"))
     
     
@@ -286,7 +288,8 @@ ui <- dashboardPage(
                   collapsed = TRUE,
                   actionButton("button_Act2", "Act"),
                   verbatimTextOutput("to_Act2", placeholder = TRUE),
-                  actionButton("button_Act_Continue2", "Continue")
+                  actionButton("button_Act_Continue2", "Continue"),
+                  actionButton("button_Restart", "Input new stock")
                 ),
                 
                 box(
